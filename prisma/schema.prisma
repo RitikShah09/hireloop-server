@@ -1,0 +1,344 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+enum Role {
+  COMPANY
+  CANDIDATE
+  ADMIN
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SCREENING
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum InterviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationCategory {
+  APPLICATION
+  INTERVIEW
+  JOB
+  SYSTEM
+  PROFILE
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role
+  isVerified Boolean  @default(false)
+  isBlocked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company          Company?
+  candidate        Candidate?
+  sessions         Session[]
+  refreshTokens    RefreshToken[]
+  otpVerifications OtpVerification[]
+  notifications    Notification[]
+
+  @@map("users")
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  otp       String
+  type      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_verifications")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  userAgent String?
+  ipAddress String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  sessionId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  name        String
+  description String?
+  website     String?
+  logoUrl     String?
+  logoFileId  String?
+  industry    String?
+  size        String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs Job[]
+
+  @@map("companies")
+}
+
+model Candidate {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  firstName    String
+  lastName     String
+  phone        String?
+  location     String?
+  bio          String?
+  avatarUrl    String?
+  avatarFileId String?
+  skills       String[]
+  linkedinUrl  String?
+  githubUrl    String?
+  portfolioUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications    Application[]
+  resumes         Resume[]
+  certifications  Certification[]
+  workExperiences WorkExperience[]
+  educations      Education[]
+  milestones      Milestone[]
+
+  @@map("candidates")
+}
+
+model Certification {
+  id            String    @id @default(uuid())
+  candidateId   String
+  name          String
+  issuer        String
+  issueDate     DateTime?
+  expiryDate    DateTime?
+  credentialId  String?
+  credentialUrl String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("certifications")
+}
+
+model WorkExperience {
+  id          String    @id @default(uuid())
+  candidateId String
+  company     String
+  role        String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("work_experiences")
+}
+
+model Education {
+  id          String    @id @default(uuid())
+  candidateId String
+  institution String
+  degree      String
+  field       String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  grade       String?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("educations")
+}
+
+model Milestone {
+  id          String   @id @default(uuid())
+  candidateId String
+  title       String
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+model Notification {
+  id        String               @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  category  NotificationCategory @default(SYSTEM)
+  isRead    Boolean              @default(false)
+  metadata  Json?
+  createdAt DateTime             @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model Resume {
+  id          String                       @id @default(uuid())
+  candidateId String
+  fileName    String
+  fileUrl     String
+  fileId      String
+  parsedText  String?
+  embedding   Unsupported("vector(1536)")?
+  isDefault   Boolean                      @default(false)
+  createdAt   DateTime                     @default(now())
+
+  candidate    Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@map("resumes")
+}
+
+model Job {
+  id            String    @id @default(uuid())
+  companyId     String
+  title         String
+  description   String
+  requirements  String[]
+  skills        String[]
+  location      String?
+  isRemote      Boolean   @default(false)
+  salaryMin     Int?
+  salaryMax     Int?
+  currency      String    @default("INR")
+  experienceMin Int?
+  experienceMax Int?
+  status        JobStatus @default(DRAFT)
+  shareableSlug String    @unique
+  closingDate   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id           String            @id @default(uuid())
+  jobId        String
+  candidateId  String
+  resumeId     String
+  coverLetter  String?
+  status       ApplicationStatus @default(PENDING)
+  aiScore      Float?
+  aiSummary    String?
+  aiStrengths  String[]
+  aiWeaknesses String[]
+  screenedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate  Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  resume     Resume      @relation(fields: [resumeId], references: [id])
+  emailLogs  EmailLog[]
+  interviews Interview[]
+
+  @@unique([jobId, candidateId])
+  @@map("applications")
+}
+
+model Interview {
+  id            String          @id @default(uuid())
+  applicationId String
+  scheduledAt   DateTime
+  durationMins  Int             @default(60)
+  mode          String          @default("video")
+  meetLink      String?
+  notes         String?
+  status        InterviewStatus @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}
+
+model EmailLog {
+  id            String      @id @default(uuid())
+  applicationId String
+  type          String
+  to            String
+  subject       String
+  status        EmailStatus @default(PENDING)
+  sentAt        DateTime?
+  error         String?
+  createdAt     DateTime    @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("email_logs")
+}
