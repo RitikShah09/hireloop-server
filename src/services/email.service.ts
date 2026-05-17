@@ -1,24 +1,26 @@
-import { transporter } from '../config/mailer';
+import { sendMail } from '../config/mailer';
 import { env } from '../config/env';
 import prisma from '../config/prisma';
 import { logger } from '../config/logger';
 
 const B = {
-  primary: '#1a6ef5',
+  primary: '#1d6af5',
   primaryDark: '#1259d4',
-  primaryLight: '#eff6ff',
+  primaryLight: '#eff5ff',
+  primaryMuted: '#dbeafe',
   success: '#16a34a',
   successLight: '#f0fdf4',
   warning: '#d97706',
   warningLight: '#fffbeb',
   danger: '#dc2626',
   dangerLight: '#fef2f2',
-  bg: '#f8fafc',
+  bg: '#f7f8fc',
   surface: '#ffffff',
-  border: '#e2e8f0',
-  text: '#0f172a',
-  textMuted: '#64748b',
-  textSubtle: '#94a3b8',
+  surfaceRaised: '#f1f5f9',
+  border: '#e4e8f0',
+  text: '#0f1624',
+  textMuted: '#5a6478',
+  textSubtle: '#8e99b0',
 };
 
 const emailWrapper = (body: string, previewText = '') => `
@@ -43,12 +45,12 @@ const emailWrapper = (body: string, previewText = '') => `
     a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
     @media only screen and (max-width: 600px) {
       .email-container { width: 100% !important; max-width: 100% !important; }
-      .email-body { padding: 24px 16px !important; }
-      .email-footer { padding: 16px !important; }
-      .info-table td { display: block; width: 100% !important; padding: 4px 12px !important; }
+      .email-body { padding: 28px 20px !important; }
+      .email-footer { padding: 20px !important; }
+      .info-table td { display: block; width: 100% !important; padding: 6px 14px !important; }
       .info-table td:first-child { color: ${B.textSubtle}; padding-bottom: 0 !important; font-size: 11px !important; }
       .btn { width: 100% !important; text-align: center !important; }
-      h1.logo-text { font-size: 18px !important; }
+      h1.logo-text { font-size: 20px !important; }
     }
   </style>
 </head>
@@ -58,43 +60,65 @@ const emailWrapper = (body: string, previewText = '') => `
   ${previewText ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${previewText}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ''}
 
   <!-- Outer wrapper -->
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${B.bg};padding:32px 16px;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${B.bg};padding:36px 16px;">
     <tr>
       <td align="center">
 
         <!-- Email container -->
         <table class="email-container" role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
-          style="max-width:600px;border-radius:12px;overflow:hidden;border:1px solid ${B.border};box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+          style="max-width:600px;border-radius:16px;overflow:hidden;border:1px solid ${B.border};box-shadow:0 4px 32px rgba(29,106,245,0.08),0 1px 4px rgba(0,0,0,0.04);">
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,${B.primary} 0%,${B.primaryDark} 100%);padding:28px 32px;">
+            <td style="background:linear-gradient(135deg,${B.primary} 0%,${B.primaryDark} 100%);padding:28px 36px;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td>
-                    <h1 class="logo-text" style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;font-family:'Inter',Arial,sans-serif;">
-                      Hire<span style="opacity:0.75;">Loop</span>
-                    </h1>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="background:rgba(255,255,255,0.18);border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
+                          <span style="color:#ffffff;font-size:16px;font-weight:800;font-family:'Inter',Arial,sans-serif;line-height:36px;display:block;">H</span>
+                        </td>
+                        <td style="padding-left:12px;">
+                          <h1 class="logo-text" style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;font-family:'Inter',Arial,sans-serif;">
+                            Hire<span style="opacity:0.8;">Loop</span>
+                          </h1>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
+          <!-- Accent bar -->
+          <tr>
+            <td style="background:linear-gradient(90deg,${B.primary},${B.primaryDark});height:3px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
           <!-- Body -->
           <tr>
-            <td class="email-body" style="background-color:${B.surface};padding:36px 40px;">
+            <td class="email-body" style="background-color:${B.surface};padding:40px 44px;">
               ${body}
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td class="email-footer" style="background-color:${B.bg};padding:20px 40px;border-top:1px solid ${B.border};">
-              <p style="margin:0;color:${B.textSubtle};font-size:12px;line-height:1.6;text-align:center;">
-                This email was sent by HireLoop. Please do not reply directly to this message.<br/>
-                &copy; ${new Date().getFullYear()} HireLoop. All rights reserved.
-              </p>
+            <td style="background-color:${B.surfaceRaised};border-top:1px solid ${B.border};">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td class="email-footer" style="padding:22px 44px;text-align:center;">
+                    <p style="margin:0 0 6px;color:${B.textSubtle};font-size:12px;line-height:1.6;font-family:'Inter',Arial,sans-serif;">
+                      This email was sent by <strong style="color:${B.textMuted};">HireLoop</strong>. Please do not reply directly to this message.
+                    </p>
+                    <p style="margin:0;color:${B.textSubtle};font-size:11px;font-family:'Inter',Arial,sans-serif;">
+                      &copy; ${new Date().getFullYear()} HireLoop &nbsp;&bull;&nbsp; All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -109,29 +133,29 @@ const emailWrapper = (body: string, previewText = '') => `
 </html>`;
 
 const heading = (text: string) =>
-  `<h2 style="margin:0 0 20px;color:${B.text};font-size:22px;font-weight:700;line-height:1.3;font-family:'Inter',Arial,sans-serif;">${text}</h2>`;
+  `<h2 style="margin:0 0 20px;color:${B.text};font-size:22px;font-weight:700;line-height:1.3;letter-spacing:-0.3px;font-family:'Inter',Arial,sans-serif;">${text}</h2>`;
 
 const para = (text: string, muted = false) =>
-  `<p style="margin:0 0 16px;color:${muted ? B.textMuted : B.text};font-size:15px;line-height:1.7;font-family:'Inter',Arial,sans-serif;">${text}</p>`;
+  `<p style="margin:0 0 16px;color:${muted ? B.textMuted : B.text};font-size:15px;line-height:1.75;font-family:'Inter',Arial,sans-serif;">${text}</p>`;
 
 const infoRow = (label: string, value: string) => `
   <tr>
-    <td style="padding:10px 16px;color:${B.textMuted};font-size:13px;width:130px;vertical-align:top;white-space:nowrap;font-family:'Inter',Arial,sans-serif;">${label}</td>
-    <td style="padding:10px 16px;color:${B.text};font-size:13px;font-weight:500;font-family:'Inter',Arial,sans-serif;">${value}</td>
+    <td style="padding:11px 18px;color:${B.textMuted};font-size:12.5px;width:140px;vertical-align:top;white-space:nowrap;font-family:'Inter',Arial,sans-serif;border-bottom:1px solid ${B.border};">${label}</td>
+    <td style="padding:11px 18px;color:${B.text};font-size:13px;font-weight:500;font-family:'Inter',Arial,sans-serif;border-bottom:1px solid ${B.border};">${value}</td>
   </tr>`;
 
 const infoTable = (rows: string) => `
   <table class="info-table" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-    style="border-radius:8px;border:1px solid ${B.border};overflow:hidden;margin:20px 0;">
-    <tbody style="background:${B.bg};">${rows}</tbody>
+    style="border-radius:10px;border:1px solid ${B.border};overflow:hidden;margin:24px 0;">
+    <tbody style="background:${B.surfaceRaised};">${rows}</tbody>
   </table>`;
 
 const divider = () =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;"><tr><td style="border-top:1px solid ${B.border};"></td></tr></table>`;
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:28px 0;"><tr><td style="border-top:1px solid ${B.border};"></td></tr></table>`;
 
 const callout = (text: string, color = B.primary, bg = B.primaryLight) =>
-  `<div style="background:${bg};border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;">
-    <p style="margin:0;color:${color === B.primary ? '#1259d4' : color};font-size:14px;line-height:1.6;font-family:'Inter',Arial,sans-serif;">${text}</p>
+  `<div style="background:${bg};border-left:4px solid ${color};border-radius:0 10px 10px 0;padding:16px 20px;margin:24px 0;">
+    <p style="margin:0;color:${B.primaryDark};font-size:14px;line-height:1.7;font-family:'Inter',Arial,sans-serif;">${text}</p>
   </div>`;
 
 const scoreChip = (score: number) => {
@@ -161,7 +185,7 @@ export const sendEmail = async (
   }
 
   try {
-    await transporter.sendMail({ from: env.SMTP_FROM, to, subject, html });
+    await sendMail({ from: env.GMAIL_FROM, to, subject, html });
 
     if (logId) {
       await prisma.emailLog.update({

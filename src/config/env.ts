@@ -21,11 +21,11 @@ const envSchema = z.object({
 
   GEMINI_API_KEY: z.string(),
 
-  SMTP_HOST: z.string(),
-  SMTP_PORT: z.string().default('587'),
-  SMTP_USER: z.string().email(),
-  SMTP_PASS: z.string(),
-  SMTP_FROM: z.string(),
+  GMAIL_CLIENT_ID: z.string(),
+  GMAIL_CLIENT_SECRET: z.string(),
+  GMAIL_REFRESH_TOKEN: z.string(),
+  GMAIL_REDIRECT_URI: z.string(),
+  GMAIL_FROM: z.string(),
 
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
   RATE_LIMIT_MAX: z.string().default('100'),

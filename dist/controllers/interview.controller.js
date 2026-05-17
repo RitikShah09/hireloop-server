@@ -124,8 +124,8 @@ const sendInterviewEmail = async (opts) => {
       cancelled: 'Cancelled',
       rescheduled: 'Rescheduled',
     };
-    await mailer_1.transporter.sendMail({
-      from: env_1.env.SMTP_FROM,
+    await (0, mailer_1.sendMail)({
+      from: env_1.env.GMAIL_FROM,
       to: opts.to,
       subject: `Interview ${subjectMap[opts.status]}: ${opts.jobTitle} at ${opts.companyName}`,
       html,

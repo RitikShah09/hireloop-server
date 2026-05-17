@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { transporter } from '../config/mailer';
+import { sendMail } from '../config/mailer';
 import { env } from '../config/env';
 import { AppError } from '../utils/errors';
 import { logger } from '../config/logger';
@@ -137,8 +137,8 @@ export const sendEmailVerificationOtp = async (
   });
 
   try {
-    await transporter.sendMail({
-      from: env.SMTP_FROM,
+    await sendMail({
+      from: env.GMAIL_FROM,
       to: email,
       subject: 'Verify your HireLoop email',
       html,
@@ -200,8 +200,8 @@ export const sendPasswordResetOtp = async (email: string): Promise<void> => {
     previewText: `Your HireLoop password reset code is ${otp}`,
   });
 
-  await transporter.sendMail({
-    from: env.SMTP_FROM,
+  await sendMail({
+    from: env.GMAIL_FROM,
     to: email,
     subject: 'Reset your HireLoop password',
     html,

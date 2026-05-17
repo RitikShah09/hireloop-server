@@ -12,11 +12,11 @@ export declare const env: {
   IMAGEKIT_PRIVATE_KEY: string;
   IMAGEKIT_URL_ENDPOINT: string;
   GEMINI_API_KEY: string;
-  SMTP_HOST: string;
-  SMTP_PORT: string;
-  SMTP_USER: string;
-  SMTP_PASS: string;
-  SMTP_FROM: string;
+  GMAIL_CLIENT_ID: string;
+  GMAIL_CLIENT_SECRET: string;
+  GMAIL_REFRESH_TOKEN: string;
+  GMAIL_REDIRECT_URI: string;
+  GMAIL_FROM: string;
   RATE_LIMIT_WINDOW_MS: string;
   RATE_LIMIT_MAX: string;
   VOYAGE_API_KEY: string;

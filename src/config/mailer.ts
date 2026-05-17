@@ -1,17 +1,45 @@
-import nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 import { env } from './env';
 
-export const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: parseInt(env.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+const oAuth2Client = new google.auth.OAuth2(
+  env.GMAIL_CLIENT_ID,
+  env.GMAIL_CLIENT_SECRET,
+  env.GMAIL_REDIRECT_URI
+);
 
-transporter.verify((err) => {
-  if (err) console.error('Mailer error:', err);
-  else console.log('Mailer ready');
-});
+oAuth2Client.setCredentials({ refresh_token: env.GMAIL_REFRESH_TOKEN });
+
+const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+
+export const sendMail = async ({
+  from,
+  to,
+  subject,
+  html,
+}: {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<void> => {
+  const messageParts = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=utf-8',
+    '',
+    html,
+  ];
+
+  const raw = Buffer.from(messageParts.join('\r\n'))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  await gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw },
+  });
+};

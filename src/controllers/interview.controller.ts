@@ -4,7 +4,7 @@ import { sendSuccess } from '../utils/response';
 import { getPaginationParams, buildPaginationMeta } from '../utils/response';
 import { AuthenticatedRequest } from '../types';
 import prisma from '../config/prisma';
-import { transporter } from '../config/mailer';
+import { sendMail } from '../config/mailer';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 import { redis, RedisKeys, REDIS_TTL } from '../config/redis';
@@ -72,8 +72,8 @@ const sendInterviewEmail = async (opts: {
       cancelled: 'Cancelled',
       rescheduled: 'Rescheduled',
     };
-    await transporter.sendMail({
-      from: env.SMTP_FROM,
+    await sendMail({
+      from: env.GMAIL_FROM,
       to: opts.to,
       subject: `Interview ${subjectMap[opts.status]}: ${opts.jobTitle} at ${opts.companyName}`,
       html,

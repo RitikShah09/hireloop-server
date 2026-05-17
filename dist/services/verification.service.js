@@ -187,8 +187,8 @@ const sendEmailVerificationOtp = async (userId, email) => {
     previewText: `Your HireLoop verification code is ${otp}`,
   });
   try {
-    await mailer_1.transporter.sendMail({
-      from: env_1.env.SMTP_FROM,
+    await (0, mailer_1.sendMail)({
+      from: env_1.env.GMAIL_FROM,
       to: email,
       subject: 'Verify your HireLoop email',
       html,
@@ -246,8 +246,8 @@ const sendPasswordResetOtp = async (email) => {
       "If you didn't request a password reset, you can safely ignore this email.",
     previewText: `Your HireLoop password reset code is ${otp}`,
   });
-  await mailer_1.transporter.sendMail({
-    from: env_1.env.SMTP_FROM,
+  await (0, mailer_1.sendMail)({
+    from: env_1.env.GMAIL_FROM,
     to: email,
     subject: 'Reset your HireLoop password',
     html,

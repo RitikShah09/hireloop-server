@@ -1,24 +1,34 @@
 'use strict';
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
 Object.defineProperty(exports, '__esModule', { value: true });
-exports.transporter = void 0;
-const nodemailer_1 = __importDefault(require('nodemailer'));
+exports.sendMail = void 0;
+const googleapis_1 = require('googleapis');
 const env_1 = require('./env');
-exports.transporter = nodemailer_1.default.createTransport({
-  host: env_1.env.SMTP_HOST,
-  port: parseInt(env_1.env.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: env_1.env.SMTP_USER,
-    pass: env_1.env.SMTP_PASS,
-  },
-});
-exports.transporter.verify((err) => {
-  if (err) console.error('Mailer error:', err);
-  else console.log('Mailer ready');
-});
+const oAuth2Client = new googleapis_1.google.auth.OAuth2(
+  env_1.env.GMAIL_CLIENT_ID,
+  env_1.env.GMAIL_CLIENT_SECRET,
+  env_1.env.GMAIL_REDIRECT_URI
+);
+oAuth2Client.setCredentials({ refresh_token: env_1.env.GMAIL_REFRESH_TOKEN });
+const gmail = googleapis_1.google.gmail({ version: 'v1', auth: oAuth2Client });
+const sendMail = async ({ from, to, subject, html }) => {
+  const messageParts = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=utf-8',
+    '',
+    html,
+  ];
+  const raw = Buffer.from(messageParts.join('\r\n'))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  await gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw },
+  });
+};
+exports.sendMail = sendMail;
 //# sourceMappingURL=mailer.js.map
