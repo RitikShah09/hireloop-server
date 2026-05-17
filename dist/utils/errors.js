@@ -1,19 +1,19 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.asyncHandler = exports.AppError = void 0;
 class AppError extends Error {
-    constructor(message, statusCode) {
-        super(message);
-        this.statusCode = statusCode;
-        this.isOperational = true;
-        Error.captureStackTrace(this, this.constructor);
-    }
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
 }
 exports.AppError = AppError;
 const asyncHandler = (fn) => {
-    return (req, res, next) => {
-        fn(req, res, next).catch(next);
-    };
+  return (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
 };
 exports.asyncHandler = asyncHandler;
 //# sourceMappingURL=errors.js.map

@@ -35,7 +35,7 @@ const invalidateJobCaches = async (
 };
 
 export const createJob = asyncHandler(async (req: Request, res: Response) => {
-  const body = req.body;
+  const { body } = parseRequest(createJobSchema, req);
   const user = (req as AuthenticatedRequest).user;
   const company = await prisma.company.findUnique({
     where: { userId: user.userId },
@@ -47,7 +47,6 @@ export const createJob = asyncHandler(async (req: Request, res: Response) => {
       ...body,
       companyId: company.id,
       shareableSlug: generateSlug(body.title),
-      closingDate: body.closingDate ? new Date(body.closingDate) : undefined,
     },
   });
 
@@ -70,10 +69,7 @@ export const updateJob = asyncHandler(async (req: Request, res: Response) => {
 
   const updated = await prisma.job.update({
     where: { id: params.id },
-    data: {
-      ...body,
-      closingDate: body.closingDate ? new Date(body.closingDate) : undefined,
-    },
+    data: { ...body },
   });
 
   await invalidateJobCaches(company.id, params.id, job.shareableSlug);

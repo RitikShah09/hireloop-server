@@ -1,21 +1,48 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^a-zA-Z0-9]/, 'Must contain a special character'),
-    role: z.enum(['COMPANY', 'CANDIDATE'], {
-      message: 'Role is required',
-    }),
-    firstName: z.string().min(1).optional(),
-    lastName: z.string().min(1).optional(),
-    companyName: z.string().min(1).optional(),
-  }),
+  body: z
+    .object({
+      email: z.string().email('Invalid email'),
+      password: z
+        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .regex(/[A-Z]/, 'Must contain an uppercase letter')
+        .regex(/[0-9]/, 'Must contain a number')
+        .regex(/[^a-zA-Z0-9]/, 'Must contain a special character'),
+      role: z.enum(['COMPANY', 'CANDIDATE'], {
+        message: 'Role is required',
+      }),
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+      companyName: z.string().optional(),
+    })
+    .refine(
+      (d) =>
+        d.role !== 'CANDIDATE' ||
+        (d.firstName && d.firstName.trim().length > 0),
+      {
+        message: 'First name is required',
+        path: ['firstName'],
+      }
+    )
+    .refine(
+      (d) =>
+        d.role !== 'CANDIDATE' || (d.lastName && d.lastName.trim().length > 0),
+      {
+        message: 'Last name is required',
+        path: ['lastName'],
+      }
+    )
+    .refine(
+      (d) =>
+        d.role !== 'COMPANY' ||
+        (d.companyName && d.companyName.trim().length > 0),
+      {
+        message: 'Company name is required',
+        path: ['companyName'],
+      }
+    ),
 });
 
 export const loginSchema = z.object({
