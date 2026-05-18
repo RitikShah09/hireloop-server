@@ -1,38 +1,31 @@
-'use strict';
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
-Object.defineProperty(exports, '__esModule', { value: true });
-exports.sendScreeningCompleteEmail =
-  exports.sendNewApplicationAlertEmail =
-  exports.sendApplicationReceivedEmail =
-  exports.sendApplicationEmail =
-  exports.sendEmail =
-    void 0;
-const mailer_1 = require('../config/mailer');
-const env_1 = require('../config/env');
-const prisma_1 = __importDefault(require('../config/prisma'));
-const logger_1 = require('../config/logger');
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendScreeningCompleteEmail = exports.sendNewApplicationAlertEmail = exports.sendApplicationReceivedEmail = exports.sendApplicationEmail = exports.sendEmail = void 0;
+const mailer_1 = require("../config/mailer");
+const env_1 = require("../config/env");
+const prisma_1 = __importDefault(require("../config/prisma"));
+const logger_1 = require("../config/logger");
 const B = {
-  primary: '#1d6af5',
-  primaryDark: '#1259d4',
-  primaryLight: '#eff5ff',
-  primaryMuted: '#dbeafe',
-  success: '#16a34a',
-  successLight: '#f0fdf4',
-  warning: '#d97706',
-  warningLight: '#fffbeb',
-  danger: '#dc2626',
-  dangerLight: '#fef2f2',
-  bg: '#f7f8fc',
-  surface: '#ffffff',
-  surfaceRaised: '#f1f5f9',
-  border: '#e4e8f0',
-  text: '#0f1624',
-  textMuted: '#5a6478',
-  textSubtle: '#8e99b0',
+    primary: '#1d6af5',
+    primaryDark: '#1259d4',
+    primaryLight: '#eff5ff',
+    primaryMuted: '#dbeafe',
+    success: '#16a34a',
+    successLight: '#f0fdf4',
+    warning: '#d97706',
+    warningLight: '#fffbeb',
+    danger: '#dc2626',
+    dangerLight: '#fef2f2',
+    bg: '#f7f8fc',
+    surface: '#ffffff',
+    surfaceRaised: '#f1f5f9',
+    border: '#e4e8f0',
+    text: '#0f1624',
+    textMuted: '#5a6478',
+    textSubtle: '#8e99b0',
 };
 const emailWrapper = (body, previewText = '') => `
 <!DOCTYPE html>
@@ -142,10 +135,8 @@ const emailWrapper = (body, previewText = '') => `
 
 </body>
 </html>`;
-const heading = (text) =>
-  `<h2 style="margin:0 0 20px;color:${B.text};font-size:22px;font-weight:700;line-height:1.3;letter-spacing:-0.3px;font-family:'Inter',Arial,sans-serif;">${text}</h2>`;
-const para = (text, muted = false) =>
-  `<p style="margin:0 0 16px;color:${muted ? B.textMuted : B.text};font-size:15px;line-height:1.75;font-family:'Inter',Arial,sans-serif;">${text}</p>`;
+const heading = (text) => `<h2 style="margin:0 0 20px;color:${B.text};font-size:22px;font-weight:700;line-height:1.3;letter-spacing:-0.3px;font-family:'Inter',Arial,sans-serif;">${text}</h2>`;
+const para = (text, muted = false) => `<p style="margin:0 0 16px;color:${muted ? B.textMuted : B.text};font-size:15px;line-height:1.75;font-family:'Inter',Arial,sans-serif;">${text}</p>`;
 const infoRow = (label, value) => `
   <tr>
     <td style="padding:11px 18px;color:${B.textMuted};font-size:12.5px;width:140px;vertical-align:top;white-space:nowrap;font-family:'Inter',Arial,sans-serif;border-bottom:1px solid ${B.border};">${label}</td>
@@ -156,187 +147,115 @@ const infoTable = (rows) => `
     style="border-radius:10px;border:1px solid ${B.border};overflow:hidden;margin:24px 0;">
     <tbody style="background:${B.surfaceRaised};">${rows}</tbody>
   </table>`;
-const divider = () =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:28px 0;"><tr><td style="border-top:1px solid ${B.border};"></td></tr></table>`;
-const callout = (
-  text,
-  color = B.primary,
-  bg = B.primaryLight
-) => `<div style="background:${bg};border-left:4px solid ${color};border-radius:0 10px 10px 0;padding:16px 20px;margin:24px 0;">
+const divider = () => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:28px 0;"><tr><td style="border-top:1px solid ${B.border};"></td></tr></table>`;
+const callout = (text, color = B.primary, bg = B.primaryLight) => `<div style="background:${bg};border-left:4px solid ${color};border-radius:0 10px 10px 0;padding:16px 20px;margin:24px 0;">
     <p style="margin:0;color:${B.primaryDark};font-size:14px;line-height:1.7;font-family:'Inter',Arial,sans-serif;">${text}</p>
   </div>`;
 const scoreChip = (score) => {
-  const color = score >= 75 ? B.success : score >= 50 ? B.warning : B.danger;
-  const bg =
-    score >= 75 ? B.successLight : score >= 50 ? B.warningLight : B.dangerLight;
-  return `<span style="display:inline-block;padding:4px 14px;border-radius:99px;background:${bg};color:${color};font-weight:700;font-size:15px;font-family:'Inter',Arial,sans-serif;">${score}/100</span>`;
+    const color = score >= 75 ? B.success : score >= 50 ? B.warning : B.danger;
+    const bg = score >= 75 ? B.successLight : score >= 50 ? B.warningLight : B.dangerLight;
+    return `<span style="display:inline-block;padding:4px 14px;border-radius:99px;background:${bg};color:${color};font-weight:700;font-size:15px;font-family:'Inter',Arial,sans-serif;">${score}/100</span>`;
 };
-const badge = (text, color = B.primary, bg = B.primaryLight) =>
-  `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:${bg};color:${color};font-size:12px;font-weight:600;font-family:'Inter',Arial,sans-serif;">${text}</span>`;
+const badge = (text, color = B.primary, bg = B.primaryLight) => `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:${bg};color:${color};font-size:12px;font-weight:600;font-family:'Inter',Arial,sans-serif;">${text}</span>`;
 const sendEmail = async (to, subject, html, applicationId, type) => {
-  let logId;
-  if (applicationId && type) {
-    const log = await prisma_1.default.emailLog.create({
-      data: { applicationId, type, to, subject, status: 'PENDING' },
-    });
-    logId = log.id;
-  }
-  try {
-    await (0, mailer_1.sendMail)({
-      from: env_1.env.GMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
-    if (logId) {
-      await prisma_1.default.emailLog.update({
-        where: { id: logId },
-        data: { status: 'SENT', sentAt: new Date() },
-      });
+    let logId;
+    if (applicationId && type) {
+        const log = await prisma_1.default.emailLog.create({
+            data: { applicationId, type, to, subject, status: 'PENDING' },
+        });
+        logId = log.id;
     }
-  } catch (err) {
-    logger_1.logger.error('Email send failed:', err);
-    if (logId) {
-      await prisma_1.default.emailLog.update({
-        where: { id: logId },
-        data: { status: 'FAILED', error: err.message },
-      });
+    try {
+        await (0, mailer_1.sendMail)({ from: env_1.env.GMAIL_FROM, to, subject, html });
+        if (logId) {
+            await prisma_1.default.emailLog.update({
+                where: { id: logId },
+                data: { status: 'SENT', sentAt: new Date() },
+            });
+        }
     }
-  }
+    catch (err) {
+        logger_1.logger.error('Email send failed:', err);
+        if (logId) {
+            await prisma_1.default.emailLog.update({
+                where: { id: logId },
+                data: { status: 'FAILED', error: err.message },
+            });
+        }
+    }
 };
 exports.sendEmail = sendEmail;
 const sendApplicationEmail = async (to, subject, body, applicationId, type) => {
-  const html = emailWrapper(
-    body
-      .split('\n')
-      .filter(Boolean)
-      .map((line) => para(line))
-      .join('')
-  );
-  await (0, exports.sendEmail)(to, subject, html, applicationId, type);
+    const html = emailWrapper(body
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => para(line))
+        .join(''));
+    await (0, exports.sendEmail)(to, subject, html, applicationId, type);
 };
 exports.sendApplicationEmail = sendApplicationEmail;
 const sendApplicationReceivedEmail = async (opts) => {
-  const {
-    candidateEmail,
-    candidateName,
-    jobTitle,
-    companyName,
-    applicationId,
-  } = opts;
-  const html = emailWrapper(
-    `
+    const { candidateEmail, candidateName, jobTitle, companyName, applicationId, } = opts;
+    const html = emailWrapper(`
     ${heading('Application Received!')}
     ${para(`Hi <strong>${candidateName}</strong>,`)}
     ${para(`Great news — we've received your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong>.`)}
-    ${infoTable(
-      infoRow('Position', jobTitle) +
+    ${infoTable(infoRow('Position', jobTitle) +
         infoRow('Company', companyName) +
-        infoRow('Status', badge('Under Review', B.warning, B.warningLight))
-    )}
+        infoRow('Status', badge('Under Review', B.warning, B.warningLight)))}
     ${callout("Our AI screening is running in the background. You'll hear from the company as they review your profile. In the meantime, keep your HireLoop profile up to date!")}
     ${divider()}
     ${para('Good luck with your application!', true)}
-  `,
-    `Your application for ${jobTitle} at ${companyName} has been received.`
-  );
-  await (0, exports.sendEmail)(
-    candidateEmail,
-    `Application received — ${jobTitle} at ${companyName}`,
-    html,
-    applicationId,
-    'application_received'
-  );
+  `, `Your application for ${jobTitle} at ${companyName} has been received.`);
+    await (0, exports.sendEmail)(candidateEmail, `Application received — ${jobTitle} at ${companyName}`, html, applicationId, 'application_received');
 };
 exports.sendApplicationReceivedEmail = sendApplicationReceivedEmail;
 const sendNewApplicationAlertEmail = async (opts) => {
-  const {
-    companyEmail,
-    companyName,
-    candidateName,
-    jobTitle,
-    applicationId,
-    appliedAt,
-  } = opts;
-  const html = emailWrapper(
-    `
+    const { companyEmail, companyName, candidateName, jobTitle, applicationId, appliedAt, } = opts;
+    const html = emailWrapper(`
     ${heading('New Application Received')}
     ${para(`Hi <strong>${companyName}</strong> team,`)}
     ${para(`A new candidate has applied for your <strong>${jobTitle}</strong> position.`)}
-    ${infoTable(
-      infoRow('Candidate', `<strong>${candidateName}</strong>`) +
+    ${infoTable(infoRow('Candidate', `<strong>${candidateName}</strong>`) +
         infoRow('Position', jobTitle) +
-        infoRow(
-          'Applied',
-          new Date(appliedAt).toLocaleString('en-IN', {
+        infoRow('Applied', new Date(appliedAt).toLocaleString('en-IN', {
             timeZone: 'Asia/Kolkata',
             dateStyle: 'medium',
             timeStyle: 'short',
-          })
-        ) +
-        infoRow('AI Screening', badge('In progress', B.warning, B.warningLight))
-    )}
+        })) +
+        infoRow('AI Screening', badge('In progress', B.warning, B.warningLight)))}
     ${callout('Log in to your HireLoop dashboard to view their profile and resume. AI screening results will be available shortly.')}
-  `,
-    `${candidateName} applied for ${jobTitle}.`
-  );
-  await (0, exports.sendEmail)(
-    companyEmail,
-    `New application for ${jobTitle} — ${candidateName}`,
-    html,
-    applicationId,
-    'new_application_alert'
-  );
+  `, `${candidateName} applied for ${jobTitle}.`);
+    await (0, exports.sendEmail)(companyEmail, `New application for ${jobTitle} — ${candidateName}`, html, applicationId, 'new_application_alert');
 };
 exports.sendNewApplicationAlertEmail = sendNewApplicationAlertEmail;
 const sendScreeningCompleteEmail = async (opts) => {
-  const {
-    companyEmail,
-    candidateName,
-    jobTitle,
-    aiScore,
-    aiSummary,
-    applicationId,
-  } = opts;
-  const scoreColor =
-    aiScore >= 75 ? B.success : aiScore >= 50 ? B.warning : B.danger;
-  const scoreBg =
-    aiScore >= 75
-      ? B.successLight
-      : aiScore >= 50
-        ? B.warningLight
-        : B.dangerLight;
-  const scoreLabel =
-    aiScore >= 75
-      ? 'Strong match'
-      : aiScore >= 50
-        ? 'Moderate match'
-        : 'Low match';
-  const html = emailWrapper(
-    `
+    const { companyEmail, candidateName, jobTitle, aiScore, aiSummary, applicationId, } = opts;
+    const scoreColor = aiScore >= 75 ? B.success : aiScore >= 50 ? B.warning : B.danger;
+    const scoreBg = aiScore >= 75
+        ? B.successLight
+        : aiScore >= 50
+            ? B.warningLight
+            : B.dangerLight;
+    const scoreLabel = aiScore >= 75
+        ? 'Strong match'
+        : aiScore >= 50
+            ? 'Moderate match'
+            : 'Low match';
+    const html = emailWrapper(`
     ${heading('AI Screening Complete')}
     ${para(`The AI has finished screening <strong>${candidateName}</strong>'s application for <strong>${jobTitle}</strong>.`)}
-    ${infoTable(
-      infoRow('Candidate', `<strong>${candidateName}</strong>`) +
+    ${infoTable(infoRow('Candidate', `<strong>${candidateName}</strong>`) +
         infoRow('Position', jobTitle) +
         infoRow('AI Score', scoreChip(aiScore)) +
-        infoRow('Verdict', badge(scoreLabel, scoreColor, scoreBg))
-    )}
+        infoRow('Verdict', badge(scoreLabel, scoreColor, scoreBg)))}
     <div style="background:${B.bg};border:1px solid ${B.border};border-radius:8px;padding:18px 20px;margin:20px 0;">
       <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:${B.primary};text-transform:uppercase;letter-spacing:1px;font-family:'Inter',Arial,sans-serif;">AI Summary</p>
       <p style="margin:0;color:${B.text};font-size:14px;line-height:1.7;font-family:'Inter',Arial,sans-serif;">${aiSummary}</p>
     </div>
     ${callout('Log in to your HireLoop dashboard to shortlist, reject, or schedule an interview with this candidate.')}
-  `,
-    `AI screening for ${candidateName} — ${aiScore}/100.`
-  );
-  await (0, exports.sendEmail)(
-    companyEmail,
-    `AI Screening: ${candidateName} for ${jobTitle} — ${aiScore}/100`,
-    html,
-    applicationId,
-    'screening_complete'
-  );
+  `, `AI screening for ${candidateName} — ${aiScore}/100.`);
+    await (0, exports.sendEmail)(companyEmail, `AI Screening: ${candidateName} for ${jobTitle} — ${aiScore}/100`, html, applicationId, 'screening_complete');
 };
 exports.sendScreeningCompleteEmail = sendScreeningCompleteEmail;
 //# sourceMappingURL=email.service.js.map

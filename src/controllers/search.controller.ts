@@ -110,6 +110,46 @@ export const getCandidateById = asyncHandler(
           select: { fileName: true, fileUrl: true, createdAt: true },
           take: 1,
         },
+        workExperiences: {
+          orderBy: { startDate: 'desc' },
+          select: {
+            id: true,
+            company: true,
+            role: true,
+            location: true,
+            startDate: true,
+            endDate: true,
+            isCurrent: true,
+            description: true,
+          },
+        },
+        educations: {
+          orderBy: { startDate: 'desc' },
+          select: {
+            id: true,
+            institution: true,
+            degree: true,
+            field: true,
+            startDate: true,
+            endDate: true,
+            isCurrent: true,
+            grade: true,
+          },
+        },
+        certifications: {
+          orderBy: { issueDate: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            issuer: true,
+            issueDate: true,
+            credentialUrl: true,
+          },
+        },
+        milestones: {
+          orderBy: { date: 'desc' },
+          select: { id: true, title: true, description: true, date: true },
+        },
         _count: { select: { applications: true } },
       },
     });

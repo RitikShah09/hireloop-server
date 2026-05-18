@@ -1,21 +1,19 @@
-'use strict';
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
-Object.defineProperty(exports, '__esModule', { value: true });
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.IMAGEKIT_FOLDERS = exports.imagekit = void 0;
-const imagekit_1 = __importDefault(require('imagekit'));
-const env_1 = require('./env');
+const imagekit_1 = __importDefault(require("imagekit"));
+const env_1 = require("./env");
 exports.imagekit = new imagekit_1.default({
-  publicKey: env_1.env.IMAGEKIT_PUBLIC_KEY,
-  privateKey: env_1.env.IMAGEKIT_PRIVATE_KEY,
-  urlEndpoint: env_1.env.IMAGEKIT_URL_ENDPOINT,
+    publicKey: env_1.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: env_1.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: env_1.env.IMAGEKIT_URL_ENDPOINT,
 });
 exports.IMAGEKIT_FOLDERS = {
-  RESUMES: '/hireloop/resumes',
-  COMPANY_LOGOS: '/hireloop/companies',
-  CANDIDATE_AVATARS: '/hireloop/candidates',
+    RESUMES: '/hireloop/resumes',
+    COMPANY_LOGOS: '/hireloop/companies',
+    CANDIDATE_AVATARS: '/hireloop/candidates',
 };
 //# sourceMappingURL=imagekit.js.map
