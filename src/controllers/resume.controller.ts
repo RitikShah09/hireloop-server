@@ -7,6 +7,7 @@ import { logger } from '../config/logger';
 import * as imagekitService from '../services/imagekit.service';
 import { redis, RedisKeys, REDIS_TTL } from '../config/redis';
 import { PDFParse } from 'pdf-parse';
+import { storeResumeEmbedding } from '../services/rag.service';
 
 export const uploadResume = asyncHandler(
   async (req: Request, res: Response) => {
@@ -17,21 +18,28 @@ export const uploadResume = asyncHandler(
     if (!candidate) throw new AppError('Candidate profile not found', 404);
     if (!req.file) throw new AppError('Resume file is required', 400);
 
-    let parsedText = '';
-    try {
-      const parser = new PDFParse({ data: req.file.buffer });
-      parsedText = (await parser.getText()).text;
-      await parser.destroy();
-      if (!parsedText)
-        logger.warn(
-          'PDF parsed but text is empty — may be a scanned/image PDF'
-        );
-      else
-        logger.info(
-          `PDF parsed successfully: ${parsedText.length} characters extracted`
-        );
-    } catch (parseErr) {
-      logger.error('PDF parsing failed:', parseErr);
+    let parsedText: string = (req.body?.parsedText as string) || '';
+
+    if (!parsedText) {
+      try {
+        const parser = new PDFParse({ data: req.file.buffer });
+        parsedText = (await parser.getText()).text;
+        await parser.destroy();
+        if (!parsedText)
+          logger.warn(
+            'PDF parsed but text is empty — may be a scanned/image PDF'
+          );
+        else
+          logger.info(
+            `PDF parsed successfully: ${parsedText.length} characters extracted`
+          );
+      } catch (parseErr) {
+        logger.error('PDF parsing failed:', parseErr);
+      }
+    } else {
+      logger.info(
+        `Using client-provided parsed text: ${parsedText.length} characters`
+      );
     }
 
     const { url, fileId } = await imagekitService.uploadResume(
@@ -51,6 +59,13 @@ export const uploadResume = asyncHandler(
     });
 
     await redis.del(RedisKeys.resumesCache(candidate.id));
+
+    if (parsedText) {
+      storeResumeEmbedding(resume.id, parsedText).catch((err) =>
+        logger.error(`Failed to store embedding for resume ${resume.id}:`, err)
+      );
+    }
+
     sendSuccess(res, 'Resume uploaded', resume, 201);
   }
 );

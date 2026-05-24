@@ -270,6 +270,7 @@ export const getCompanyById = asyncHandler(
           skills: true,
           experienceMin: true,
           experienceMax: true,
+          status: true,
           shareableSlug: true,
           closingDate: true,
           createdAt: true,

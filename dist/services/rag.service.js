@@ -93,13 +93,17 @@ const ragCandidateQuery = async (query, jobId) => {
         if (!applications.length)
             return 'No screened candidates found for this job.';
         const context = applications
-            .map((a, i) => `--- CANDIDATE ${i + 1}: ${a.candidate.firstName} ${a.candidate.lastName} ---
+            .map((a, i) => `--- CANDIDATE ${i + 1} ---
+Name: ${a.candidate.firstName} ${a.candidate.lastName}
+Profile URL: /search/candidates/${a.candidateId}
 AI Score: ${a.aiScore}/100
 Skills: ${a.candidate.skills.join(', ')}
 Resume Excerpt: ${(a.resume.parsedText || '').slice(0, 500)}`)
             .join('\n\n');
         const model = (0, gemini_1.getModel)();
-        const result = await model.generateContent(`You are an expert AI recruiter. Answer based ONLY on the provided candidate data. Be specific and cite candidate names.
+        const result = await model.generateContent(`You are an expert AI recruiter. Answer based ONLY on the provided candidate data.
+When mentioning a candidate by name, always format it as a markdown link using their Profile URL, like this: [First Last](/search/candidates/their-id)
+Do not use bold (**) for names — use the markdown link format instead.
 
 CANDIDATE POOL DATA:
 ${context}

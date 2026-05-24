@@ -20,12 +20,12 @@ const fileFilter = (allowedTypes: string[]) => {
 
 export const uploadResume = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter(['application/pdf']),
 });
 
 export const uploadImage = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: fileFilter(['image/jpeg', 'image/png', 'image/webp']),
 });

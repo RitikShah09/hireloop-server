@@ -207,6 +207,7 @@ exports.getCompanyById = (0, errors_1.asyncHandler)(async (req, res) => {
                 skills: true,
                 experienceMin: true,
                 experienceMax: true,
+                status: true,
                 shareableSlug: true,
                 closingDate: true,
                 createdAt: true,

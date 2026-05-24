@@ -19,12 +19,12 @@ const fileFilter = (allowedTypes) => {
 };
 exports.uploadResume = (0, multer_1.default)({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: fileFilter(['application/pdf']),
 });
 exports.uploadImage = (0, multer_1.default)({
     storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: fileFilter(['image/jpeg', 'image/png', 'image/webp']),
 });
 //# sourceMappingURL=upload.middleware.js.map

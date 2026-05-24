@@ -44,6 +44,7 @@ const logger_1 = require("../config/logger");
 const imagekitService = __importStar(require("../services/imagekit.service"));
 const redis_1 = require("../config/redis");
 const pdf_parse_1 = require("pdf-parse");
+const rag_service_1 = require("../services/rag.service");
 exports.uploadResume = (0, errors_1.asyncHandler)(async (req, res) => {
     const user = req.user;
     const candidate = await prisma_1.default.candidate.findUnique({
@@ -53,18 +54,23 @@ exports.uploadResume = (0, errors_1.asyncHandler)(async (req, res) => {
         throw new errors_1.AppError('Candidate profile not found', 404);
     if (!req.file)
         throw new errors_1.AppError('Resume file is required', 400);
-    let parsedText = '';
-    try {
-        const parser = new pdf_parse_1.PDFParse({ data: req.file.buffer });
-        parsedText = (await parser.getText()).text;
-        await parser.destroy();
-        if (!parsedText)
-            logger_1.logger.warn('PDF parsed but text is empty — may be a scanned/image PDF');
-        else
-            logger_1.logger.info(`PDF parsed successfully: ${parsedText.length} characters extracted`);
+    let parsedText = req.body?.parsedText || '';
+    if (!parsedText) {
+        try {
+            const parser = new pdf_parse_1.PDFParse({ data: req.file.buffer });
+            parsedText = (await parser.getText()).text;
+            await parser.destroy();
+            if (!parsedText)
+                logger_1.logger.warn('PDF parsed but text is empty — may be a scanned/image PDF');
+            else
+                logger_1.logger.info(`PDF parsed successfully: ${parsedText.length} characters extracted`);
+        }
+        catch (parseErr) {
+            logger_1.logger.error('PDF parsing failed:', parseErr);
+        }
     }
-    catch (parseErr) {
-        logger_1.logger.error('PDF parsing failed:', parseErr);
+    else {
+        logger_1.logger.info(`Using client-provided parsed text: ${parsedText.length} characters`);
     }
     const { url, fileId } = await imagekitService.uploadResume(req.file.buffer, req.file.originalname, candidate.id);
     const resume = await prisma_1.default.resume.create({
@@ -77,6 +83,9 @@ exports.uploadResume = (0, errors_1.asyncHandler)(async (req, res) => {
         },
     });
     await redis_1.redis.del(redis_1.RedisKeys.resumesCache(candidate.id));
+    if (parsedText) {
+        (0, rag_service_1.storeResumeEmbedding)(resume.id, parsedText).catch((err) => logger_1.logger.error(`Failed to store embedding for resume ${resume.id}:`, err));
+    }
     (0, response_1.sendSuccess)(res, 'Resume uploaded', resume, 201);
 });
 exports.getResumes = (0, errors_1.asyncHandler)(async (req, res) => {
