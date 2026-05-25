@@ -4,84 +4,10 @@ import { sendSuccess } from '../utils/response';
 import { getPaginationParams, buildPaginationMeta } from '../utils/response';
 import { AuthenticatedRequest } from '../types';
 import prisma from '../config/prisma';
-import { sendMail } from '../config/mailer';
-import { env } from '../config/env';
 import { logger } from '../config/logger';
 import { redis, RedisKeys, REDIS_TTL } from '../config/redis';
 import * as notificationService from '../services/notification.service';
-
-const sendInterviewEmail = async (opts: {
-  to: string;
-  candidateName: string;
-  jobTitle: string;
-  companyName: string;
-  scheduledAt: Date;
-  durationMins: number;
-  mode: string;
-  meetLink?: string;
-  notes?: string;
-  status: 'scheduled' | 'cancelled' | 'rescheduled';
-}) => {
-  const dateStr = opts.scheduledAt.toLocaleString('en-IN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
-  });
-
-  const statusMessages = {
-    scheduled: 'You have been scheduled for an interview',
-    cancelled: 'Your interview has been cancelled',
-    rescheduled: 'Your interview has been rescheduled',
-  };
-
-  const B = {
-    primary: '#1a6ef5',
-    bg: '#f8fafc',
-    border: '#e2e8f0',
-    text: '#0f172a',
-    muted: '#64748b',
-  };
-
-  const html = `
-    <div style="font-family:'Inter',Arial,sans-serif;max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid ${B.border};box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-      <div style="background:linear-gradient(135deg,${B.primary} 0%,#1259d4 100%);padding:24px 32px;">
-        <span style="color:#fff;font-size:20px;font-weight:700;">HireLoop</span>
-      </div>
-      <div style="padding:32px;">
-        <h2 style="margin:0 0 8px;color:${B.text};font-size:20px;font-weight:700;">${statusMessages[opts.status]}</h2>
-        <p style="margin:0 0 20px;color:${B.muted};font-size:15px;">For the <strong style="color:${B.text};">${opts.jobTitle}</strong> role at <strong style="color:${B.text};">${opts.companyName}</strong>.</p>
-        <table style="width:100%;border-collapse:collapse;background:${B.bg};border-radius:8px;border:1px solid ${B.border};overflow:hidden;">
-          <tr><td style="padding:12px 16px;color:${B.muted};font-size:13px;width:130px;">Date &amp; Time</td><td style="padding:12px 16px;color:${B.text};font-weight:600;font-size:13px;">${dateStr} IST</td></tr>
-          <tr style="border-top:1px solid ${B.border};"><td style="padding:12px 16px;color:${B.muted};font-size:13px;">Duration</td><td style="padding:12px 16px;color:${B.text};font-size:13px;">${opts.durationMins} minutes</td></tr>
-          <tr style="border-top:1px solid ${B.border};"><td style="padding:12px 16px;color:${B.muted};font-size:13px;">Mode</td><td style="padding:12px 16px;color:${B.text};font-size:13px;text-transform:capitalize;">${opts.mode.replace('_', ' ')}</td></tr>
-          ${opts.meetLink ? `<tr style="border-top:1px solid ${B.border};"><td style="padding:12px 16px;color:${B.muted};font-size:13px;">Meet Link</td><td style="padding:12px 16px;font-size:13px;"><a href="${opts.meetLink}" style="color:${B.primary};">${opts.meetLink}</a></td></tr>` : ''}
-        </table>
-        ${opts.notes ? `<div style="margin-top:16px;padding:14px 18px;background:#eff6ff;border-left:3px solid ${B.primary};border-radius:0 8px 8px 0;"><p style="margin:0;color:#1259d4;font-size:14px;"><strong>Note:</strong> ${opts.notes}</p></div>` : ''}
-        <p style="margin-top:24px;color:${B.muted};font-size:12px;">Good luck! — ${opts.companyName} via HireLoop</p>
-      </div>
-    </div>
-  `;
-
-  try {
-    const subjectMap = {
-      scheduled: 'Scheduled',
-      cancelled: 'Cancelled',
-      rescheduled: 'Rescheduled',
-    };
-    await sendMail({
-      from: env.GMAIL_FROM,
-      to: opts.to,
-      subject: `Interview ${subjectMap[opts.status]}: ${opts.jobTitle} at ${opts.companyName}`,
-      html,
-    });
-  } catch (err) {
-    logger.error('Interview email failed:', err);
-  }
-};
+import { sendInterviewEmail } from '../services/email.service';
 
 export const scheduleInterview = asyncHandler(
   async (req: Request, res: Response) => {

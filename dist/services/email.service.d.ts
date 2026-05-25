@@ -1,3 +1,22 @@
+export declare const otpEmailTemplate: (opts: {
+    title: string;
+    subtitle: string;
+    otp: string;
+    footerNote: string;
+    previewText: string;
+}) => string;
+export declare const sendInterviewEmail: (opts: {
+    to: string;
+    candidateName: string;
+    jobTitle: string;
+    companyName: string;
+    scheduledAt: Date;
+    durationMins: number;
+    mode: string;
+    meetLink?: string;
+    notes?: string;
+    status: "scheduled" | "cancelled" | "rescheduled";
+}) => Promise<void>;
 export declare const sendEmail: (to: string, subject: string, html: string, applicationId?: string, type?: string) => Promise<void>;
 export declare const sendApplicationEmail: (to: string, subject: string, body: string, applicationId: string, type: string) => Promise<void>;
 export declare const sendApplicationReceivedEmail: (opts: {

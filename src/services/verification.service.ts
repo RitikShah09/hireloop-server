@@ -3,112 +3,12 @@ import { sendMail } from '../config/mailer';
 import { env } from '../config/env';
 import { AppError } from '../utils/errors';
 import { logger } from '../config/logger';
+import { otpEmailTemplate } from './email.service';
 
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 const OTP_EXPIRY_MINUTES = 15;
-
-const otpEmailHtml = (opts: {
-  title: string;
-  subtitle: string;
-  otp: string;
-  footerNote: string;
-  previewText: string;
-}) => {
-  const B = {
-    primary: '#1a6ef5',
-    primaryDark: '#1259d4',
-    primaryLight: '#eff6ff',
-    bg: '#f8fafc',
-    surface: '#ffffff',
-    border: '#e2e8f0',
-    text: '#0f172a',
-    textMuted: '#64748b',
-    textSubtle: '#94a3b8',
-  };
-
-  return `
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>HireLoop</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { margin:0;padding:0;width:100% !important;background-color:${B.bg}; }
-    @media only screen and (max-width:480px) {
-      .email-container { width:100% !important;border-radius:0 !important; }
-      .otp-block { padding:20px !important; }
-      .otp-digits { font-size:28px !important;letter-spacing:8px !important; }
-      .body-cell { padding:28px 20px !important; }
-    }
-  </style>
-</head>
-<body style="margin:0;padding:0;background-color:${B.bg};font-family:'Inter',Arial,Helvetica,sans-serif;">
-
-  <!-- Preview text -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${opts.previewText}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${B.bg};padding:40px 16px;">
-    <tr>
-      <td align="center">
-
-        <table class="email-container" role="presentation" cellpadding="0" cellspacing="0" border="0" width="480"
-          style="max-width:480px;border-radius:14px;overflow:hidden;border:1px solid ${B.border};box-shadow:0 4px 24px rgba(0,0,0,0.07);">
-
-          <!-- Header with gradient -->
-          <tr>
-            <td align="center" style="background:linear-gradient(135deg,${B.primary} 0%,${B.primaryDark} 100%);padding:28px 32px 32px;">
-              <h1 style="margin:0 0 4px;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;font-family:'Inter',Arial,sans-serif;">
-                Hire<span style="opacity:0.7;">Loop</span>
-              </h1>
-              <p style="margin:0;color:rgba(255,255,255,0.75);font-size:13px;font-family:'Inter',Arial,sans-serif;">AI-Powered Hiring Platform</p>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td class="body-cell" style="background:${B.surface};padding:36px 40px;text-align:center;">
-
-              <h2 style="margin:0 0 10px;color:${B.text};font-size:22px;font-weight:700;font-family:'Inter',Arial,sans-serif;">${opts.title}</h2>
-              <p style="margin:0 0 28px;color:${B.textMuted};font-size:15px;line-height:1.6;font-family:'Inter',Arial,sans-serif;">${opts.subtitle}</p>
-
-              <!-- OTP block -->
-              <div class="otp-block" style="background:${B.primaryLight};border:2px solid ${B.primary};border-radius:12px;padding:28px 32px;margin:0 auto 28px;display:inline-block;min-width:200px;">
-                <p style="margin:0 0 6px;color:${B.primary};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;font-family:'Inter',Arial,sans-serif;">One-Time Code</p>
-                <p class="otp-digits" style="margin:0;color:${B.primaryDark};font-size:36px;font-weight:800;letter-spacing:10px;font-family:'Inter',Arial,monospace;">${opts.otp}</p>
-              </div>
-
-              <p style="margin:0 0 8px;color:${B.textMuted};font-size:14px;font-family:'Inter',Arial,sans-serif;">
-                This code expires in <strong style="color:${B.text};">${OTP_EXPIRY_MINUTES} minutes</strong>.
-              </p>
-              <p style="margin:0;color:${B.textSubtle};font-size:12px;font-family:'Inter',Arial,sans-serif;">Never share this code with anyone.</p>
-
-            </td>
-          </tr>
-
-          <!-- Footer note -->
-          <tr>
-            <td style="background:${B.bg};padding:18px 40px;border-top:1px solid ${B.border};">
-              <p style="margin:0;color:${B.textSubtle};font-size:12px;line-height:1.6;text-align:center;font-family:'Inter',Arial,sans-serif;">
-                ${opts.footerNote}<br/>
-                &copy; ${new Date().getFullYear()} HireLoop. All rights reserved.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-
-      </td>
-    </tr>
-  </table>
-
-</body>
-</html>`;
-};
 
 export const sendEmailVerificationOtp = async (
   userId: string,
@@ -126,7 +26,7 @@ export const sendEmailVerificationOtp = async (
     data: { userId, otp, type: 'email_verify', expiresAt },
   });
 
-  const html = otpEmailHtml({
+  const html = otpEmailTemplate({
     title: 'Verify your email',
     subtitle:
       'Enter this one-time code in HireLoop to verify your email address.',
@@ -191,7 +91,7 @@ export const sendPasswordResetOtp = async (email: string): Promise<void> => {
     data: { userId: user.id, otp, type: 'password_reset', expiresAt },
   });
 
-  const html = otpEmailHtml({
+  const html = otpEmailTemplate({
     title: 'Reset your password',
     subtitle: 'Use this one-time code to reset your HireLoop password.',
     otp,
